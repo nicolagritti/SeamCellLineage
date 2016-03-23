@@ -668,6 +668,7 @@ class GUI(QtGui.QWidget):
 
         self.df = self.df.sort(['tidx','rowtype','cside','cXpos']).reset_index(drop=True)
         self.updateCanvas2()
+        self.updateCanvas3()
         self.updateTable()
         self.setFocus()
                 
@@ -748,14 +749,15 @@ class GUI(QtGui.QWidget):
         # cell text on the image
         tpmask = self.df['tidx'] == (self.tp.value() - self.hatch.value())
         cellmask = self.df['rowtype'] == 'cell'
+        sidemask = self.df['cside'] == self.side
 
-        for idx, cell in self.df[tpmask & cellmask].iterrows():
+        for idx, cell in self.df[tpmask & cellmask & sidemask].iterrows():
 
-            if cell.cZpos == self.sl.value():
-                clabel = str(cell.cname) + ' ' + str(cell.cside)
-                self.ax2.text( cell.cXpos, cell.cYpos + 10, clabel, color='red', size='medium', alpha=.8,
-                        rotation=90)
-                self.ax2.plot( cell.cXpos, cell.cYpos, 'x', color='red', alpha = .8 )
+#            if cell.cZpos == self.sl.value():
+            clabel = str(cell.cname) + ' ' + str(cell.cside)
+            self.ax2.text( cell.cXpos, cell.cYpos + 10, clabel, color='yellow', size='medium', alpha=.8,
+                    rotation=90)
+            self.ax2.plot( cell.cXpos, cell.cYpos, 'o', color='yellow', alpha = .8, mew = 0 )
 
 
         # redraw the canvas
@@ -799,13 +801,15 @@ class GUI(QtGui.QWidget):
         self.fig3.subplots_adjust(left=0., right=1., top=1., bottom=0.)
         
         # cell text on the image
-        for idx, cell in self.df[tidxPrevMask & cellMask].iterrows():
+        sidemask = self.df['cside'] == self.side
 
-            if cell.cZpos == self.sl.value():
-                clabel = str(cell.cname) + ' ' + str(cell.cside)
-                self.ax3.text( cell.cXpos, cell.cYpos + 10, clabel, color='red', size='small', alpha=.8,
-                        rotation=90)
-                self.ax3.plot( cell.cXpos, cell.cYpos, 'x', color='red', alpha = .8 )
+        for idx, cell in self.df[tidxPrevMask & cellMask & sidemask].iterrows():
+
+            # if cell.cZpos == self.sl.value():
+            clabel = str(cell.cname) + ' ' + str(cell.cside)
+            self.ax3.text( cell.cXpos, cell.cYpos + 10, clabel, color='yellow', size='small', alpha=.8,
+                    rotation=90)
+            self.ax3.plot( cell.cXpos, cell.cYpos, 'o', color='yellow', alpha = .8, mew = 0 )
 
         # redraw the canvas
         self.canvas3.draw()
@@ -832,8 +836,9 @@ class GUI(QtGui.QWidget):
 
         tidxNowMask = self.df.tidx == tidxNow
         cellMask = self.df.rowtype == 'cell'
+        sidemask = self.df['cside'] == self.side
 
-        cellsNow = self.df[cellMask&tidxNowMask]
+        cellsNow = self.df[cellMask&tidxNowMask & sidemask]
         cellsPrev = pd.DataFrame({})
         if len(cellsNow) > 0:
 	        sideMask = self.df.cside == cellsNow.cside.values[0]
@@ -844,7 +849,7 @@ class GUI(QtGui.QWidget):
 	        else:
 	            tidxPrev = np.max( self.df.ix[ sideMask & ( self.df.tidx<tidxNow ), 'tidx' ] )
 	            tidxPrevMask = self.df['tidx'] == tidxPrev
-	            cellsPrev = self.df[cellMask&tidxPrevMask]
+	            cellsPrev = self.df[cellMask&tidxPrevMask&sidemask]
 	      
 	        horHeaders = ['tidx','times','cell name','cell side','cellXpos','cellYpos','cellZpos','-',
 	        				'tidx','times','cell name','cell side','cellXpos','cellYpos','cellZpos']
