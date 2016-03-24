@@ -11,27 +11,22 @@ import glob
 import numpy as np
 import time
 from timelapseFun import *
+from skimage import io
+from PIL import Image
 
 ####################################################################################################
 # Give the path and the worm name to be converted
 ####################################################################################################
 
-path = 'Y:\\Images\\150914_mlt10_250x250x20\\'
-path = 'Z:\\Jeroen\\28_08_2015_qIs56\\'
-path = 'Y:\\Images\\151124_EMS3_250x250x20\\'
-path = 'Y:\\Images\\151124_N2_mCherryOP50_250x250x20\\'
-path = 'Y:\\Images\\160125_mcherry_lag2YFP\\'
-path = 'Y:\\Images\\160308_EMS35_250x250x20\\'
+path = 'X:\\Michael\\160323_MBA21_SRF3'
 
 # folders = [ i for i in os.listdir(path) if os.path.isdir(path+i) ]
 # foldersToKeep = [ ( not i.endswith('downsized') ) & ( not i.endswith('straighten') ) for i in folders ]
 # worms = [ i for idx, i in enumerate(folders) if foldersToKeep[idx] ]
 # worms.sort()
 
-wnumber = np.arange(1,17)
-worms = [ 'C%.2d'%i for i in wnumber ]
-# worms = ['C19']
-print(worms)
+worms = [ x for x in os.listdir(path) if len(x) == 3 ]
+worms = [ 'C29', 'C30' ]
 
 scaleFactor = 8
 
@@ -48,27 +43,27 @@ def downsize():
         ################################################################################################
         
         # define the input folder and the output folder
-        inpath = path+worm
-        outpath = path+worm+'_downsized'
+        inpath = os.path.join( path, worm )
+        outpath = os.path.join( path, worm+'_downsized' )
         
         # read in all the images to be converted
         channels = [False,False,False]
         flist = [None,None,None]
         
-        if os.path.isfile(inpath+'\\z001_488nm.tif'):
-            flist[0] = glob.glob(inpath+'\\z*488nm.tif')
+        if os.path.isfile( os.path.join( inpath, 'z001_488nm.tif' ) ):
+            flist[0] = glob.glob( os.path.join( inpath, 'z*488nm.tif' ) )
             flist[0].sort()
             channels[0] = True
-        if os.path.isfile(inpath+'\\z001_561nm.tif'):
-            flist[1] = glob.glob(inpath+'\\z*561nm.tif')
+        if os.path.isfile( os.path.join( inpath, 'z001_561nm.tif' ) ):
+            flist[1] = glob.glob( os.path.join( inpath, 'z*561nm.tif') )
             flist[1].sort()
             channels[1] = True
-        if os.path.isfile(inpath+'\\z001_CoolLED.tif'):
-            flist[2] = glob.glob(inpath+'\\z*CoolLED.tif')
+        if os.path.isfile( os.path.join( inpath, 'z001_CoolLED.tif' ) ):
+            flist[2] = glob.glob( os.path.join( inpath, 'z*CoolLED.tif') )
             flist[2].sort()
             channels[2] = True
         
-        metalist = glob.glob(inpath+'\\z*.txt')
+        metalist = glob.glob( os.path.join( inpath, 'z*.txt' ) )
         metalist.sort()
         
         ################################################################################################
@@ -102,18 +97,29 @@ def downsize():
                     if not os.path.isfile(outpath+'\\'+f.split('\\')[-1]):
                 
                         print('loading ' + flist[jdx][idx])
+
+                        start = time.time()
+
+                        imgs = Image.open( f, mode = 'r' )
+                        print(imgs.seek(0))
                         
-                        imgs = loadstack(f)
-                        
-                        smallimgs = []
-                        for img in imgs:
-                            Nbig = img.shape[0]
-                            Nsmall = img.shape[0]/scaleFactor
-                            smallimg = ( img.reshape([Nsmall, Nbig/Nsmall, Nsmall, Nbig/Nsmall]).mean(3).mean(1) ).astype(np.uint16)
-                            smallimgs.append( smallimg )
-                        smallimgs = np.array(smallimgs)
+                        end1 = time.time()
+                        print( end1-start )
+
+                        # smallimgs = []
+                        # for img in imgs:
+                        #     Nbig = img.shape[0]
+                        #     Nsmall = img.shape[0]/scaleFactor
+                        #     smallimg = ( img.reshape([Nsmall, Nbig/Nsmall, Nsmall, Nbig/Nsmall]).mean(3).mean(1) ).astype(np.uint16)
+                        #     smallimgs.append( smallimg )
+                        # smallimgs = np.array(smallimgs)
+
+                        # end2 = time.time()
+                        # print(end2-end1)
                     
-                        imsave(outpath+'\\'+f.split('\\')[-1],smallimgs)
+                        # imsave(outpath+'\\'+f.split('\\')[-1],smallimgs)
+
+                        # print( time.time() - end2 )
         
     print('Waiting for one hour to restart!')
     time.sleep(60*60)
